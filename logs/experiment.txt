@@ -1,0 +1,2 @@
+第一次实验：bs = 32 有eagle，wandb名字：mimo-7B-rl-spec2-updatefromtensor-slime_zkvpz9p9-RANK_0
+第二次实验：bs= 16 有eagle，wandb名字：

@@ -148,6 +148,18 @@ def get_slime_extra_args_provider(add_custom_arguments=None):
                 default="raw",
                 help="The method to convert megatron weights to hugging face weights for SGLang.",
             )
+            parser.add_argument(
+                "--override-opt-param-scheduler",
+                action="store_true",
+                default=False,
+                help="Override optimizer param scheduler states from checkpoint with current config.",
+            )
+            parser.add_argument(
+                "--use-checkpoint-opt-param-scheduler",
+                action="store_true",
+                default=False,
+                help="Use optimizer param scheduler states from checkpoint (disable override).",
+            )
 
             return parser
 

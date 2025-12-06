@@ -14,6 +14,8 @@ if [ -z "${NOHUP_WRAPPED:-}" ]; then
     exit 0
 fi
 
+#!/bin/bash
+
 # for rerun the task
 pkill -9 sglang
 sleep 3
@@ -28,7 +30,7 @@ set -ex
 
 # will prevent ray from buffering stdout/stderr
 export PYTHONBUFFERED=16
-#export SGLANG_ENABLE_SPEC_V2=1
+export SGLANG_ENABLE_SPEC_V2=1
 export WANDB_KEY="cd411df8b73eb3f5c1ae1220cc1ec4e3c9d1f86e"
 export WANDB_API_KEY="cd411df8b73eb3f5c1ae1220cc1ec4e3c9d1f86e"
 export CUDA_VISIBLE_DEVICES=4,5,6,7
@@ -41,6 +43,7 @@ else
 fi
 echo "HAS_NVLINK: $HAS_NVLINK (detected $NVLINK_COUNT NVLink references)"
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 source "${SCRIPT_DIR}/models/mimo-7B-rl.sh"
 
 CKPT_ARGS=(
@@ -59,7 +62,7 @@ ROLLOUT_ARGS=(
    --rollout-shuffle
    --rm-type deepscaler
    --num-rollout 3000
-   --rollout-batch-size 32
+   --rollout-batch-size 64
    --n-samples-per-prompt 8
    --rollout-max-response-len 8192
    --rollout-temperature 0.8
@@ -107,6 +110,7 @@ OPTIMIZER_ARGS=(
    --optimizer adam
    --lr 1e-6
    --lr-decay-style constant
+   --override-opt-param-scheduler
    --weight-decay 0.1
    --adam-beta1 0.9
    --adam-beta2 0.98
@@ -115,7 +119,7 @@ OPTIMIZER_ARGS=(
 WANDB_ARGS=(
    --use-wandb
    --wandb-project slime-dev
-   --wandb-group mimo-7B-rl-spec1-updatefromtensor
+   --wandb-group mimo-7B-rl-spec2-updatefromtensor-slime-bs64
    --wandb-key ${WANDB_API_KEY}
 )
 
@@ -154,12 +158,12 @@ export MASTER_ADDR=${MASTER_ADDR:-"127.0.0.1"}
 ray start --head --node-ip-address ${MASTER_ADDR} --num-gpus 4 --disable-usage-stats
 
 # Build the runtime environment JSON with proper variable substitution
-# \"SGLANG_ENABLE_SPEC_V2\": \"1\"
 RUNTIME_ENV_JSON="{
   \"env_vars\": {
     \"PYTHONPATH\": \"/root/Megatron-LM/\",
     \"CUDA_DEVICE_MAX_CONNECTIONS\": \"1\",
-    \"NCCL_NVLS_ENABLE\": \"${HAS_NVLINK}\"
+    \"NCCL_NVLS_ENABLE\": \"${HAS_NVLINK}\",
+    \"SGLANG_ENABLE_SPEC_V2\": \"1\"
   }
 }"
 
